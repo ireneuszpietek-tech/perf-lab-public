@@ -1,0 +1,43 @@
+services:
+  core-kotlin:
+    build: ../../services/core-kotlin
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/app
+      - SPRING_DATASOURCE_USERNAME=app
+      - SPRING_DATASOURCE_PASSWORD=pass
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    ports: [ "8080:8080" ]
+    depends_on: [ postgres ]
+    profiles: [ "core" ]
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_USER=app
+      - POSTGRES_DB=app
+    ports: [ "5432:5432" ]
+    volumes: [ "pgdata:/var/lib/postgresql/data" ]
+    profiles: [ "core" ]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes: [ "./prometheus.yml:/etc/prometheus/prometheus.yml" ]
+    ports: [ "9090:9090" ]
+    profiles: [ "obs" ]
+
+  grafana:
+    image: grafana/grafana:10.4.5
+    ports: [ "3000:3000" ]
+    profiles: [ "obs" ]
+
+  localstack:
+    image: localstack/localstack:3
+    environment:
+      - SERVICES=s3,sqs
+      - DEBUG=0
+    ports: [ "4566:4566" ]
+    profiles: [ "aws" ]
+
+volumes:
+  pgdata: { }

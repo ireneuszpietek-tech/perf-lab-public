@@ -1,0 +1,14 @@
+[id]
+
+// Using ULID (monotonic) instead of UUIDv4.
+// Reasons:
+// - lexicographically sortable → enables better DB index locality
+// - lower index fragmentation → more stable write perf
+// - less entropy collisions under heavy parallel inserts
+// - fits well with future sharding strategy (prefix-based partitioning)
+// ADR-002 contains full trade-off discussion.
+String id = UlidCreator.getMonotonicUlid();
+
+“Reason: sorted-by-time identifiers reduce B-tree write amplification.”
+ULID → sort order → B-tree → page splits → IO pattern → write amplification → perf
+

@@ -1,0 +1,20 @@
+rebuild all:
+~/projects/perf-lab$ docker compose -f infra/compose/docker-compose.yml --profile core --profile obs up -d --build
+
+run tests:
+~/projects/perf-lab$ docker run --rm -i --network host -v "$PWD/loadtest":/scripts grafana/k6 run /scripts/smoke.js
+
+~/IdeaProjects/perf-lab$ ./gradlew clean buildAll
+
+make test-api-parcel AUTH_TOKEN="eyJraWQiOiJkZXYtaHMyNTYiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMiLCJleHAiOjE3NzE1MTUyNjksImlhdCI6MTc3MTUwMTY2OSwianRpIjoiYjkwNzEyNDQtMTAxZS00ZWRmLWIyMjQtMDA2NDkzMWFkYmQwIiwic2NvcGUiOiIifQ.RRCctJBu5QjhmoF6oSg5F8rrJgXcLZGvngQ8xCrIJnA" BASE_URL="http://[0:0:0:0:0:0:0:1]:8080"
+
+k6 run perf/k6/EXP-0001_HYP-0002_silent_exception_swallowing/exp0001_hyp0002_silent_exception_swallowing_baseline.js
+
+jmc --open baseline.jfr
+
+./gradlew -q projects
+
+./gradlew :parcel:services:parcel-service:bootRun --args='--spring.profiles.active=dev'
+
+# run avro
+$ ./gradlew :edge-ingestion:edge-ingestion-service:clean :edge-ingestion:edge-ingestion-service:generateAvroJava

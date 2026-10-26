@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="MainKt" type="JetRunConfigurationType" nameIsGenerated="true">
+    <envs>
+      <env name="OPENAI_API_KEY" value="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" />
+    </envs>
+    <option name="MAIN_CLASS_NAME" value="ip.logistics.ai.agent.MainKt" />
+    <module name="agent-runtime.main" />
+    <shortenClasspath name="NONE" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

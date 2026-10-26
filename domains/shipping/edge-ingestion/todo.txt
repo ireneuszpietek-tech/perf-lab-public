@@ -1,0 +1,9 @@
+Experiment	            Engineering Question	What you learn
+
+Find bottleneck   	Am I limited by storage, Avro decoding, compute, or allocation?	Separating costs across different layers
+
+Add concurrency	    Does reading 2–4 files in parallel increase throughput? At what cost?	Tuning concurrency to hardware resources
+
+Slow down consumer	    What happens when the reader produces faster than the processor consumes?	Backpressure, queues, and memory budget
+
+Interrupt processing	What defines a correct result after a file error or restart?	Failure semantics, checkpoints, and correctness

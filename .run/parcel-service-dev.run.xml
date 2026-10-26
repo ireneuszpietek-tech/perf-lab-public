@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="parcel-service-dev" type="JetRunConfigurationType">
+    <option name="MAIN_CLASS_NAME" value="ip.logistics.shipping.shipment.service.command.ShipmentServiceApplicationKt" />
+    <module name="shipment.shipment-service.main" />
+    <shortenClasspath name="NONE" />
+    <option name="VM_PARAMETERS" value="-Duser.timezone=UTC" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

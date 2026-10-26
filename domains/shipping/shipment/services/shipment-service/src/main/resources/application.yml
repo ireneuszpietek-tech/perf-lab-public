@@ -1,0 +1,80 @@
+server:
+  port: 8080
+  tomcat:
+    accept-count: 100
+    threads:
+      max: 200
+#    basedir: .
+#    accesslog:
+#      enabled: true
+#      directory: logs
+#      prefix: access
+#      suffix: .log
+#      rotate: true
+#        #      pattern: '%h %l %u %t "%r" %s %b %F'
+#        # Field pattern:
+#        # %h   -> client IP
+#        # %l   -> ident (always '-')
+#        # %u   -> authenticated user
+#        # %t   -> timestamp
+#        # %r   -> request line (METHOD URL HTTP/x)
+#        # %s   -> HTTP status
+#      # %b   -> response size
+#      # %F   -> time in ms (Tomcat 10+/11)
+#      # %T   -> time in seconds
+#      # %{X-Forwarded-For}i -> real client IP (header)
+#      # %{User-Agent}i      -> user agent
+#      pattern: "%h %l %u %{yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}t \"%r\" status=%s bytes=%b time_ms=%F time_s=%T xff=\"%{x-forwarded-for}i\" ua=\"%{user-agent}i\""
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: shipping-shipment-service
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/app
+    username: app
+    password: pass
+
+  security:
+    oauth2:
+#      resourceserver:
+#        jwt: { }
+#        # PROD – one of the following (depending on IdP):
+#        # issuer-uri: https://keycloak.example.com/realms/myrealm
+#        # jwk-set-uri: https://keycloak.example.com/realms/myrealm/protocol/openid-connect/certs
+#
+#        # DEV (HMAC/secret in code): leave empty or remove section completely
+#        # and configure decoder as @Bean (NimbusJwtDecoder.withSecretKey(...))
+
+management:
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+      slo:
+        "[http.server.requests]": 5ms,10ms,25ms,50ms,100ms,250ms
+logging:
+  level:
+    root: INFO
+    "[ip.logistics]": DEBUG
+    "[org.springframework]": WARN
+  #    "[org.springframework.web]": DEBUG
+  #    "[org.springframework.security]": TRACE
+  #    "[org.springframework.security.web.access]": TRACE
+  #    "[org.springframework.security.oauth2]": DEBUG
+  #    "[org.springframework.security.web.access.intercept]": TRACE
+  #    "[org.springframework.security.authorization]": TRACE
+  #    "[org.apache.coyote]": DEBUG
+  #    "[org.apache.tomcat.util.net]": DEBUG
+  file:
+    name: logs/app.log

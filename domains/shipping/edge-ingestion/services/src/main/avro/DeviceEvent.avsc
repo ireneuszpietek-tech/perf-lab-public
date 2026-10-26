@@ -1,0 +1,40 @@
+{
+  "type": "record",
+  "name": "DeviceEvent",
+  "namespace": "ip.logistics.shipping.edgeingestion.avro",
+  "doc": "A single event produced by an edge device.",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string",
+      "doc": "Stable identifier of the event."
+    },
+    {
+      "name": "deviceId",
+      "type": "string",
+      "doc": "Identifier of the device that produced the event."
+    },
+    {
+      "name": "occurredAt",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Device-reported event time. The value is not guaranteed to be unique."
+    },
+    {
+      "name": "eventType",
+      "type": {
+        "type": "enum",
+        "name": "EventType",
+        "symbols": [
+          "SCANNED",
+          "SORTED",
+          "LOADED",
+          "UNLOADED"
+        ]
+      },
+      "doc": "Business type of the event."
+    }
+  ]
+}

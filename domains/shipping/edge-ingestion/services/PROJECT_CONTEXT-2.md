@@ -1,0 +1,3 @@
+**Concurrent stateful stream processing with bounded memory**
+
+Consume gigabytes of events online while keeping the process within a megabyte-scale memory budget. Partition work by key, maintain per-key state and accumulators, and continuously update decisions and published results as events arrive, including late or out-of-order events. Spill state to disk when the active key set no longer fits in memory.

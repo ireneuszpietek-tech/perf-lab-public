@@ -1,0 +1,60 @@
+### === Global / IDE / OS ===
+.idea/
+.vscode/
+.DS_Store
+*.iml
+*.ipr
+*.iws
+out/
+tmp/
+.cache/
+logs/
+*.log
+
+### === JVM / Kotlin / Gradle ===
+.gradle/
+.kotlinc/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+!**/src/main/**/out/
+!**/src/test/**/out/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### === Node / Frontend ===
+node_modules/
+clients/web/node_modules/
+clients/web/dist/
+clients/web/.vite/
+yarn.lock
+pnpm-lock.yaml
+package-lock.json
+
+### === Perf & Loadtest ===
+perf/**/results/
+perf/**/reports/
+perf/**/build/
+perf/**/tmp/
+perf/**/jfr/
+perf/**/prof/
+loadtest/**/*.json
+loadtest/**/*.csv
+
+### === Infra / Docker ===
+infra/compose/data/
+infra/compose/logs/
+infra/compose/tmp/
+*.pid
+
+### === Docs & Misc ===
+docs/**/*.html
+docs/**/*.tmp
+docs/**/*.log
+
+### === Environment / Secrets ===
+.env
+.env.*
+*.secret
+*.key
