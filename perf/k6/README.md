@@ -9,10 +9,10 @@ Prerequisites: JDK 21 (the shipment Gradle build targets Java 21), k6, and the r
 In terminal 1, start the shipment application (the relevant part of the Experimental Logistics System):
 
 ```bash
-./gradlew -p domains/shipping/shipment :shipment-service:bootRun --args='--spring.profiles.active=dev'
+./gradlew :shipment:shipment-service:bootRun --args='--spring.profiles.active=dev'
 ```
 
-The shipment composite build declares the `shipment-service` project. Its Spring configuration uses port `8080`; the `dev` profile enables `/dev/token`. Keep the application running for the test.
+The root composite build includes `shipment` and its local dependencies (`public-id-codec` and `platform-spring-boot`). Start Gradle from the repository root; using `-p domains/shipping/shipment` skips these sibling included builds and may fail dependency resolution. The shipment build declares the `shipment-service` project. Its Spring configuration uses port `8080`; the `dev` profile enables `/dev/token`. Keep the application running for the test.
 
 Verify that HTTP is reachable (an unauthorized response is sufficient to show the server is listening):
 
