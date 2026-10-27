@@ -9,7 +9,6 @@ import ip.logistics.shipping.parcel.application.port.inbound.CreateShipment
 import ip.logistics.shipping.parcel.application.port.inbound.GetShipmentView
 import ip.logistics.shipping.parcel.application.port.outbound.ParcelPublicIdCodec
 import ip.logistics.shipping.parcel.application.port.outbound.ShipmentRepository
-import ip.logistics.shipping.parcel.application.port.outbound.ShipmentViewRepository
 import ip.logistics.shipping.parcel.application.query.GetShipmentViewHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -49,11 +48,11 @@ class ParcelConfig {
 
     @Bean
     fun getShipmentView(
-        shipmentViewRepository: ShipmentViewRepository,
+        shipmentRepository: ShipmentRepository,
         codec: ParcelPublicIdCodec,
     ): GetShipmentView =
         GetShipmentViewHandler(
             codec,
-            shipmentViewRepository,
+            shipmentRepository,
         )
 }
