@@ -1,217 +1,62 @@
-# Hypothesis HYP-001 — Tail Latency Driven by Allocation Rate and GC Pressure
-
-## Driver
+# HYP-001 — How does allocation rate affect JVM tail latency?
 
-During baseline load testing of a simple REST-based service (Spring Boot, Kotlin),
-the system exhibits a disproportionate increase in tail latency (p95/p99) under moderate concurrency,
-despite low external I/O, no database access, and stable average CPU utilization.
-
-Initial observations suggest that:
-- request processing allocates a significant number of short-lived objects
-(DTOs, collections, JSON structures),
-- allocation pressure increases linearly with concurrency,
-- garbage collection activity (especially young GC frequency and pause clustering)
-correlates strongly with spikes in tail latency.
-
-Because the system has no external dependencies (DB, cache, network I/O),
-any tail latency degradation must originate from in-process JVM behavior
-rather than from infrastructure or coordination effects.
-
-This makes allocation rate and GC behavior a prime suspect for explaining
-non-linear latency growth at higher percentiles.
-
-## Rationale
-In JVM-based systems, tail latency is often dominated not by business logic,
-but by memory management effects, including:
-- allocation rate exceeding eden evacuation capacity,
-- GC pauses clustering under bursty allocation patterns,
-- increased object promotion due to survivor space pressure,
-- cache-unfriendly object graphs and excessive copying.
-
-These effects frequently remain invisible at the p50 or average latency level,
-yet dominate p95/p99 behavior — precisely where SLO violations occur.
+## Question
 
-If tail latency is primarily driven by allocation and GC pressure,
-then performance tuning focused on CPU, threads, or concurrency primitives
-will be ineffective unless allocation behavior is addressed.
+How does object allocation per request affect p95/p99 latency in a JVM-based REST service?
 
-Understanding this relationship is essential for:
-- establishing a reliable performance baseline,
-- interpreting future experiments involving concurrency or I/O,
-- preventing misleading conclusions in later JVM-level investigations.
+The goal is to **observe and understand** the relationship between allocations, garbage collection (GC), and latency under load—not to assume that GC is necessarily the bottleneck.
 
-## Hypothesis
-Tail latency degradation (p95/p99) under load is primarily caused by
-high allocation rates and GC pressure, not by computational complexity or contention.
+## Experiment
 
-Specifically:
-- increasing concurrency leads to a superlinear increase in allocation rate,
-- GC activity (frequency and pause clustering) correlates with latency spikes,
-- reducing per-request allocation volume will significantly improve p95/p99 latency,
-even when request throughput and business logic remain unchanged.
+Compare two implementations of the **same request path**:
 
-In short:
-- If allocation pressure is reduced, tail latency improves;
-- if allocation pressure remains high, tail latency degrades — independent of I/O.
+- **A — baseline:** current implementation.
+- **B — lower allocation:** a small change intended to allocate fewer bytes per request, without changing the response or business behavior.
 
-This is a causal hypothesis, not merely correlational.
+Use the same input data, request mix, offered request rate, JVM/GC settings, heap size, and environment for both runs. Warm up before measuring. Repeat runs to check whether differences exceed normal variation.
 
-## Expected Impact
+Before interpreting results, verify that the intended operation actually ran. In particular, a GET returning `404` may exercise a different path from a successful GET.
 
-If HYP-0001 is true:
--reducing object allocation per request will:
--lower GC frequency and pause clustering,
--flatten p95/p99 latency curves under load,
--improve latency stability without changing system semantics.
+The existing [k6 scenario](../../../perf/k6/EXP-001_HYP-001-tail-latency-driven-gc-pressure/exp-001_hyp-001-tail-latency-driven-gc-pressure.js) is a **starting point**, not a validated experiment: its random GET IDs may produce `404` responses, and the load generator/settings need checking before an A/B comparison.
 
-JVM profiling will show:
-- reduced allocation rate (MB/s),
-- fewer young GC cycles per unit time,
-- lower variance in GC pause timing.
+## Required System Capabilities
 
-Future performance experiments will gain a cleaner baseline,
-allowing clearer attribution of effects to concurrency, I/O, or architectural changes.
+HYP-001 drives only the changes needed to run a controlled comparison on the Experimental Logistics System:
 
-Architectural and coding decisions (e.g., DTO design, serialization strategy,
-collection usage) may be formally justified and standardized via ADRs.
+- **Repeatable REST operation:** a stable request path with known inputs and successful responses, so both variants perform equivalent work.
+- **Controllable allocation behavior:** a baseline and a lower-allocation variant that preserve the operation's business semantics.
+- **Comparable workload:** the same request mix, data, arrival rate, and runtime configuration for both variants.
+- **Measurable JVM and HTTP behavior:** k6 latency and throughput metrics alongside allocation and GC observations (e.g., JFR/GC logs).
 
-If HYP-0001 is false:
-- tail latency remains high despite reduced allocation rates,
-- GC activity does not correlate with latency spikes,
-- the dominant cause lies elsewhere (e.g., scheduling, CPU cache effects,
-lock contention, framework internals).
+**Implementation status:** these are experiment requirements, not claims that the current system already satisfies them. Check existing capabilities first; extend the system only where needed. Experiment-specific allocation code need not become permanent production-style functionality.
 
-## Confidence
+## Measurements
 
-Moderate.
+| Measure | Why |
+| --- | --- |
+| Allocated bytes/request and allocation rate (MB/s) | Verify that B actually changes allocation pressure |
+| GC count and pause duration | Check whether GC behavior changes |
+| p50 / p95 / p99 request latency | Observe the whole latency distribution, especially the tail |
+| Requests/s, failures, dropped k6 iterations | Check whether both runs delivered comparable workloads |
+| CPU utilization (if available) | Look for other possible bottlenecks |
 
-Allocation-heavy request processing is a known JVM performance risk,
-but the magnitude of its impact on tail latency in this specific system
-must be validated experimentally.
+Where possible, collect k6 results together with JFR and GC logs. Keep measurement windows aligned; do not infer causality from a coincident GC event and an aggregate p99 alone.
 
-## Experiment (EXP-0001)
-### Method
+## Observations
 
-Baseline (Version A — current implementation):
+*Not measured/documented here yet.*
 
-Run load test using k6 with a mixed request profile:
-- 80% GET
-- 20% CREATE
-- Target load: gradual ramp to sustained concurrency (e.g., 100–300 VUs).
-- No external I/O; in-memory data structures only.
+Record actual numbers for A and B, the environment and test parameters, and links to raw results. Separate measurements from explanations.
 
-Collect:
-k6 metrics:
-- p50 / p95 / p99 latency,
-- throughput,
-- error rate.
+## Conclusions
 
-JVM artifacts:
-JFR recording with:
-- allocation events,
-- GC events and pauses,
-- CPU samples.
-- heap usage over time.
+*Pending experiment.*
 
-Observe:
-- allocation rate (MB/s),
-- GC frequency and pause clustering,
-- correlation between GC activity and p99 latency spikes.
+Questions to answer after measurement:
 
-Intervention (Version B — reduced allocation variant):
+- Did allocations per request decrease?
+- At a comparable offered load and successful request mix, did p95/p99 change beyond run-to-run noise?
+- Did GC behavior change enough to explain the latency difference, or are other mechanisms more plausible?
+- What does this experiment **not** establish?
 
-Apply a minimal, semantics-preserving change that reduces allocations, such as:
-- reduced object copying,
-- simpler DTO structures,
-- less intermediate collection creation,
-- adjusted serialization behavior.
-
-Repeat the exact same load test and collect identical artifacts.
-
-Artifacts to Collect
-
-JFR recordings (before and after intervention)
-
-k6 output (latency distributions, RPS)
-
-GC and allocation rate summaries
-
-CPU flamegraphs (if applicable)
-
-Metrics
-Primary Metrics
-
-p95 / p99 latency (before vs after)
-
-Allocation rate (MB/s)
-
-GC pause frequency and distribution
-
-Young GC count per unit time
-
-Secondary Metrics
-
-CPU utilization
-
-Heap occupancy trends
-
-Object promotion rate (if observable)
-
-Falsification Conditions
-
-HYP-0001 is confirmed if:
-
-allocation rate decreases materially after intervention,
-
-GC activity (frequency or pause clustering) decreases,
-
-p95/p99 latency improves significantly,
-
-throughput remains stable or improves.
-
-HYP-0001 is falsified if:
-
-tail latency remains unchanged despite reduced allocation,
-
-GC behavior does not correlate with latency spikes,
-
-latency degradation is driven by unrelated JVM or framework mechanisms.
-
-Decision Path (CON / ADR)
-If HYP-0001 is confirmed
-
-We conclude:
-
-allocation behavior is a first-class performance concern,
-
-tail latency in JVM services is strongly influenced by memory churn,
-
-performance baselines must include allocation and GC metrics.
-
-Potential ADRs:
-
-ADR-0001 — Allocation-Aware Performance Baseline
-
-ADR-0002 — DTO and Serialization Allocation Guidelines
-
-ADR-0003 — JVM Profiling Required for Performance Experiments
-
-Next Steps:
-
-Introduce allocation-aware regression tests,
-
-Extend experiments to concurrency and contention scenarios (HYP-0002).
-
-If HYP-0001 is falsified
-
-We conclude:
-
-allocation pressure is not the dominant factor,
-
-tail latency is driven by other mechanisms.
-
-Next Steps:
-
-Investigate contention and scheduling effects (HYP-0002),
-
-Analyze framework-level execution paths and thread management.
+A useful conclusion can be “allocation decreased but latency did not materially improve.” No ADR is required unless a consequential engineering decision follows.
