@@ -19,6 +19,17 @@ Before interpreting results, verify that the intended operation actually ran. In
 
 The existing [k6 scenario](../../../perf/k6/EXP-001_HYP-001-tail-latency-driven-gc-pressure/exp-001_hyp-001-tail-latency-driven-gc-pressure.js) is a **starting point**, not a validated experiment: its random GET IDs may produce `404` responses, and the load generator/settings need checking before an A/B comparison.
 
+## Required System Capabilities
+
+HYP-001 drives only the changes needed to run a controlled comparison on the Experimental Logistics System:
+
+- **Repeatable REST operation:** a stable request path with known inputs and successful responses, so both variants perform equivalent work.
+- **Controllable allocation behavior:** a baseline and a lower-allocation variant that preserve the operation's business semantics.
+- **Comparable workload:** the same request mix, data, arrival rate, and runtime configuration for both variants.
+- **Measurable JVM and HTTP behavior:** k6 latency and throughput metrics alongside allocation and GC observations (e.g., JFR/GC logs).
+
+**Implementation status:** these are experiment requirements, not claims that the current system already satisfies them. Check existing capabilities first; extend the system only where needed. Experiment-specific allocation code need not become permanent production-style functionality.
+
 ## Measurements
 
 | Measure | Why |
