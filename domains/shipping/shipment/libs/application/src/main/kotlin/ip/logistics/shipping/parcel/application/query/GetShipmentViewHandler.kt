@@ -3,11 +3,8 @@ package ip.logistics.shipping.parcel.application.query
 import ip.logistics.parcel.domain.model.TrackingCode
 import ip.logistics.shipping.parcel.application.port.inbound.GetShipmentView
 import ip.logistics.shipping.parcel.application.port.outbound.ParcelPublicIdCodec
-import ip.logistics.shipping.parcel.application.port.outbound.ShipmentViewRepository
-import mu.KotlinLogging
+import ip.logistics.shipping.parcel.application.port.outbound.ShipmentRepository
 import java.time.Instant
-
-private val log = KotlinLogging.logger {}
 
 data class ShipmentView(
     val trackingCode: TrackingCode,
@@ -21,11 +18,20 @@ data class ShipmentView(
 
 class GetShipmentViewHandler(
     private val parcelPublicIdCodec: ParcelPublicIdCodec,
-    private val viewRepo: ShipmentViewRepository
+    private val shipmentRepository: ShipmentRepository
 ) : GetShipmentView {
     override fun handle(trackingCode: TrackingCode): ShipmentView? {
-        val id = parcelPublicIdCodec.decode(trackingCode) ?: return null
-        val view = viewRepo.get(id) ?: return null
-        return view.copy(trackingCode = trackingCode)
+        val id = parcelPublicIdCodec.decode(trackingCode)
+        val shipment = shipmentRepository.get(id) ?: return null
+
+        return ShipmentView(
+            trackingCode = trackingCode,
+            status = shipment.status().name,
+            fromLocker = shipment.fromLocker,
+            toLocker = shipment.toLocker,
+            weightGrams = shipment.spec.weightGrams,
+            size = shipment.spec.size,
+            lastUpdatedAt = shipment.updatedAt()
+        )
     }
 }
