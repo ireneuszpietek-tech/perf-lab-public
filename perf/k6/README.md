@@ -2,9 +2,29 @@
 
 ## HYP-001 / EXP-001 — Repeatable GET baseline
 
-**Prerequisites:** Start `shipment-service` locally with the Spring `dev` profile and install k6. The script expects the API at `http://localhost:8080` and obtains a test JWT from `/dev/token` (available only in the `dev` profile).
+### 1. Start the Experimental Logistics System
 
-From the repository root:
+Prerequisites: JDK 21 (the shipment Gradle build targets Java 21), k6, and the repository's Gradle wrapper. Use two terminals, both from the **repository root**.
+
+In terminal 1, start the shipment application (the relevant part of the Experimental Logistics System):
+
+```bash
+./gradlew -p domains/shipping/shipment :shipment-service:bootRun --args='--spring.profiles.active=dev'
+```
+
+The shipment composite build declares the `shipment-service` project. Its Spring configuration uses port `8080`; the `dev` profile enables `/dev/token`. Keep the application running for the test.
+
+Verify that HTTP is reachable (an unauthorized response is sufficient to show the server is listening):
+
+```bash
+curl -i http://localhost:8080/api/shipping/v1/parcels/test
+```
+
+**Note:** The startup command is based on the checked-in Gradle configuration and has not been tested end-to-end here. If startup fails, inspect the application log and local configuration before interpreting any k6 result. The current application YAML also includes PostgreSQL datasource properties; whether additional infrastructure is needed must be verified locally.
+
+### 2. Run the GET baseline
+
+In terminal 2, from the repository root:
 
 ```bash
 RATE=200 SEED_COUNT=1000 WARMUP=2m MEASURE=10m \
