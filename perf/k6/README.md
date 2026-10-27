@@ -1,3 +1,28 @@
+# k6 experiments
+
+## HYP-001 / EXP-001 — Repeatable GET baseline
+
+**Prerequisites:** Start `shipment-service` locally with the Spring `dev` profile and install k6. The script expects the API at `http://localhost:8080` and obtains a test JWT from `/dev/token` (available only in the `dev` profile).
+
+From the repository root:
+
+```bash
+RATE=200 SEED_COUNT=1000 WARMUP=2m MEASURE=10m \
+k6 run perf/k6/EXP-001_HYP-001-tail-latency-driven-gc-pressure/exp-001_hyp-001-tail-latency-driven-gc-pressure.js
+```
+
+The k6 setup creates 1,000 parcels using POST, stores the returned tracking codes and checks that GET returns HTTP 200. Warmup and measurement then send **GET-only** traffic at the configured arrival rate. POST setup requests are not part of the measured GET phase.
+
+Parameters: `RATE` (GET arrivals/s), `SEED_COUNT` (parcels created during setup), `WARMUP` and `MEASURE` (durations); optional `BASE_URL`, `AUTH_URL` and `MODE`.
+
+**Validation:** Check that seeding succeeds, measured GETs return 200, and k6 reports no dropped iterations. Record the repository commit, JVM flags, test environment and k6 output before comparing runs. `RATE=200` is an example, not a validated stable throughput target. This scenario has not yet been verified end-to-end against a running service.
+
+Research question and measurement plan: [HYP-001](../../docs/research/HYP-001-tail-latency-driven-gc-pressure/HYP-001-tail-latency-driven-allocation-rate-gc-pressure.md).
+
+---
+
+## Existing notes
+
 docker run -d -p 9000:9000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest
 
 $ k6 run smoke.js
