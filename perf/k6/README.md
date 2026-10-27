@@ -1,3 +1,65 @@
+# k6 experiments
+
+## HYP-001 / EXP-001 — Repeatable GET baseline
+
+### 1. Start the Experimental Logistics System
+
+Prerequisites: JDK 21 (the shipment Gradle build targets Java 21), k6, and the repository's Gradle wrapper. Use two terminals, both from the **repository root**.
+
+In terminal 1, start the shipment application (the relevant part of the Experimental Logistics System):
+
+```bash
+./gradlew :shipment:shipment-service:bootRun --args='--spring.profiles.active=dev'
+```
+
+The root composite build includes `shipment` and its local dependencies (`public-id-codec` and `platform-spring-boot`). Start Gradle from the repository root; using `-p domains/shipping/shipment` skips these sibling included builds and may fail dependency resolution. The shipment build declares the `shipment-service` project. Its Spring configuration uses port `8080`; the `dev` profile enables `/dev/token`. Keep the application running for the test.
+
+Verify that HTTP is reachable (an unauthorized response is sufficient to show the server is listening):
+
+```bash
+curl -i http://localhost:8080/api/shipping/v1/parcels/test
+```
+
+**Note:** The startup command is based on the checked-in Gradle configuration and has not been tested end-to-end here. If startup fails, inspect the application log and local configuration before interpreting any k6 result. The current application YAML also includes PostgreSQL datasource properties; whether additional infrastructure is needed must be verified locally.
+
+### 2. Verify development authentication
+
+The `dev` profile exposes a test-only JWT endpoint. Fetch a token to verify that development authentication works:
+
+```bash
+curl -s "http://localhost:8080/dev/token?sub=123"
+```
+
+Expected: a JSON response containing `access_token`. You can optionally test an authenticated request:
+
+```bash
+TOKEN=$(curl -fsS "http://localhost:8080/dev/token?sub=123" | jq -r '.access_token')
+curl -i -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/shipping/v1/parcels/test
+```
+
+The test tracking code may produce `404`; the purpose of this manual check is to distinguish authentication errors (`401`/`403`) from application responses. The k6 script retrieves its own JWT in `setup()`, so **no manual token export is needed to run the experiment**. Do not use development tokens outside local tests.
+
+### 3. Run the GET baseline
+
+In terminal 2, from the repository root:
+
+```bash
+RATE=200 SEED_COUNT=1000 WARMUP=2m MEASURE=10m \
+k6 run perf/k6/EXP-001_HYP-001-tail-latency-driven-gc-pressure/exp-001_hyp-001-tail-latency-driven-gc-pressure.js
+```
+
+The k6 setup creates 1,000 parcels using POST, stores the returned tracking codes and checks that GET returns HTTP 200. Warmup and measurement then send **GET-only** traffic at the configured arrival rate. POST setup requests are not part of the measured GET phase.
+
+Parameters: `RATE` (GET arrivals/s), `SEED_COUNT` (parcels created during setup), `WARMUP` and `MEASURE` (durations); optional `BASE_URL`, `AUTH_URL` and `MODE`.
+
+**Validation:** Check that seeding succeeds, measured GETs return 200, and k6 reports no dropped iterations. Record the repository commit, JVM flags, test environment and k6 output before comparing runs. `RATE=200` is an example, not a validated stable throughput target. This scenario has not yet been verified end-to-end against a running service.
+
+Research question and measurement plan: [HYP-001](../../docs/research/HYP-001-tail-latency-driven-gc-pressure/HYP-001-tail-latency-driven-allocation-rate-gc-pressure.md).
+
+---
+
+## Existing notes
+
 docker run -d -p 9000:9000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest
 
 $ k6 run smoke.js
