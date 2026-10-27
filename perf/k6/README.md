@@ -22,7 +22,24 @@ curl -i http://localhost:8080/api/shipping/v1/parcels/test
 
 **Note:** The startup command is based on the checked-in Gradle configuration and has not been tested end-to-end here. If startup fails, inspect the application log and local configuration before interpreting any k6 result. The current application YAML also includes PostgreSQL datasource properties; whether additional infrastructure is needed must be verified locally.
 
-### 2. Run the GET baseline
+### 2. Verify development authentication
+
+The `dev` profile exposes a test-only JWT endpoint. Fetch a token to verify that development authentication works:
+
+```bash
+curl -s "http://localhost:8080/dev/token?sub=123"
+```
+
+Expected: a JSON response containing `access_token`. You can optionally test an authenticated request:
+
+```bash
+TOKEN=$(curl -fsS "http://localhost:8080/dev/token?sub=123" | jq -r '.access_token')
+curl -i -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/shipping/v1/parcels/test
+```
+
+The test tracking code may produce `404`; the purpose of this manual check is to distinguish authentication errors (`401`/`403`) from application responses. The k6 script retrieves its own JWT in `setup()`, so **no manual token export is needed to run the experiment**. Do not use development tokens outside local tests.
+
+### 3. Run the GET baseline
 
 In terminal 2, from the repository root:
 
