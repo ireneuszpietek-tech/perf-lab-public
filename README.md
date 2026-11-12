@@ -75,6 +75,8 @@ The repository uses a Gradle composite-build structure. The architecture is a me
 
 ## Getting started
 
+For a step-by-step local setup and the first reproducible k6 workload, see the **[local runbook](docs/RUNBOOK.md)**. It includes prerequisites, commands, checks, and known validation gaps.
+
 Start by exploring an existing hypothesis in [docs/research/](docs/research/) and locating the corresponding implementation or workload in the repository.
 
 Useful entry points:
