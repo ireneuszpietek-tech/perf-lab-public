@@ -58,3 +58,4 @@ docs/**/*.log
 .env.*
 *.secret
 *.key
+/.run/

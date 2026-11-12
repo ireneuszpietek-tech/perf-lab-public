@@ -9,9 +9,10 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Component
 class InMemoryShipmentViewRepository : ShipmentViewRepository {
-    private val map = ConcurrentHashMap<UUID, ShipmentView>()
-    override fun get(id: ShipmentId): ShipmentView? = map[id.value]
+    private val inMemoryStorage = ConcurrentHashMap<UUID, ShipmentView>()
+
+    override fun get(id: ShipmentId): ShipmentView? = inMemoryStorage[id.value]
     override fun upsert(id: ShipmentId, view: ShipmentView) {
-        map[id.value] = view
+        inMemoryStorage[id.value] = view
     }
 }

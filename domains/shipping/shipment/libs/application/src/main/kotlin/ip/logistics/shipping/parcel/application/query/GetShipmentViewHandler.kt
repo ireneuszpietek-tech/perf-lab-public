@@ -23,7 +23,6 @@ class GetShipmentViewHandler(
     override fun handle(trackingCode: TrackingCode): ShipmentView? {
         val id = parcelPublicIdCodec.decode(trackingCode)
         val shipment = shipmentRepository.get(id) ?: return null
-
         return ShipmentView(
             trackingCode = trackingCode,
             status = shipment.status().name,
