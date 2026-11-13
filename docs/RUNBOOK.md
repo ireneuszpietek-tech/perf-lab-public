@@ -34,10 +34,10 @@ The root project is a **Gradle composite build**. The shipment execution unit is
 From the repository root:
 
 ```bash
-./gradlew -p domains/shipping/shipment :shipment-service:bootRun --args='--spring.profiles.active=dev'
+./gradlew :shipment:shipment-service:bootRun --args='--spring.profiles.active=dev'
 ```
 
-The service's checked-in configuration specifies port **8080**. The `dev` profile is used for the load test's development token endpoint.
+**Run this command from the repository root, without \`-p domains/shipping/shipment\`.** The root \`settings.gradle.kts\` includes both \`shipment\` and its local dependencies (\`libs/public-id-codec\` and \`platform-spring-boot\`) as composite builds. Using \`-p\` makes shipment a standalone build and prevents those substitutions, leading to \`Could not find ip.logistics.codec:public-id-codec:1.0.0\`.\n\nThe service's checked-in configuration specifies port **8080**. The `dev` profile is used for the load test's development token endpoint.
 
 **Database caveat:** The checked-in `application.yml` contains:
 
